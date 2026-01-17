@@ -1,28 +1,57 @@
-name: Deploy Website
+name: Deploy Nuxt Portfolio to Surge
 
-on: [push]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: ⬇️ Checkout source code
         uses: actions/checkout@v4
 
-      - name: ⎔ Setup nodejs
+      - name: ⎔ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 'lts/*'
           registry-url: https://registry.npmjs.org/
 
-      - name: 📦 Install npm
-        run: npm ci
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
-      - name: 🏗 Global Install surge
+      - name: 📂 Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 🗂 Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 🔧 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗 Build Nuxt application
+        run: pnpm run build
+
+      - name: 📁 Generate static files
+        run: pnpm run generate
+
+      - name: 🌍 Global Install Surge
         run: npm install -g surge
 
-      - name: 🏭 Build npm
-        run: npm run build
-
-      - name: 💎 Deploy surge
+      - name: 💎 Deploy to Surge
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         run: surge ./dist ${{ secrets.SURGE_DOMAIN }} --token ${{ secrets.SURGE_TOKEN }}
+        env:
+          NODE_ENV: production
