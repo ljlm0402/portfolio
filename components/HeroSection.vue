@@ -51,13 +51,13 @@
         <!-- Social Links -->
         <div class="flex justify-center space-x-6 mt-8">
           <a
-            href="#"
+            href="https://github.com/ljlm0402"
             class="text-gray-400 hover:text-blue-400 transition-colors"
           >
             <Icon name="mdi:github" class="w-6 h-6" />
           </a>
           <a
-            href="#"
+            href="https://www.npmjs.com/~limkyungmin"
             class="text-gray-400 hover:text-blue-400 transition-colors"
           >
             <Icon name="mdi:npm" class="w-6 h-6" />
